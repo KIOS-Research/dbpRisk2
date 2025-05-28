@@ -280,8 +280,8 @@ class dbpSimulator:
             self.show_message("Warning", f"Reaction model not found:\n{self.reaction_model}.", button="OK", icon="Warning")
             return
 
-        project_path = os.path.join(self.plugin_dir, "data", "project_data", f'dbpSimulator_{self.model_prefix}.qgz')
-        project_path_tmp = os.path.join(self.plugin_dir, "data", "tmp_data", f'dbpSimulator_{self.model_prefix}.qgz')
+        project_path = os.path.join(self.plugin_dir, "data", "project_data", f'dbpRisk_2_0_{self.model_prefix}.qgz')
+        project_path_tmp = os.path.join(self.plugin_dir, "data", "tmp_data", f'dbpRisk_2_0_{self.model_prefix}.qgz')
         copyfile(project_path, project_path_tmp)
         project = QgsProject.instance()
         project.read(project_path_tmp)
@@ -1015,7 +1015,7 @@ class dbpSimulator:
 
         try:
             os.system(f'taskkill /f /im {self.app}')
-            self.iface.messageBar().pushMessage("dbpRisk 2.0", "dbpSimulator successfully terminated.",
+            self.iface.messageBar().pushMessage("dbpRisk 2.0", "Successfully terminated.",
                                                 level=0, duration=2)
         except:
             self.iface.messageBar().pushMessage("dbpRisk 2.0", "Error Encountered while running "
@@ -1124,7 +1124,7 @@ class dbpSimulator:
         :param canvas: Matplotlib canvas to embed in the dock widget
         """
         # Create the dock widget
-        dock_name = "dbpSimulator: Plots"
+        dock_name = "dbpRisk 2.0: Plots"
         try:
             self.dock_plots.close()
         except:
