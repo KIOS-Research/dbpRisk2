@@ -280,8 +280,8 @@ class dbpSimulator:
             self.show_message("Warning", f"Reaction model not found:\n{self.reaction_model}.", button="OK", icon="Warning")
             return
 
-        project_path = os.path.join(self.plugin_dir, "data", "project_data", f'dbpRisk_2_0_{self.model_prefix}.qgz')
-        project_path_tmp = os.path.join(self.plugin_dir, "data", "tmp_data", f'dbpRisk_2_0_{self.model_prefix}.qgz')
+        project_path = os.path.join(self.plugin_dir, "data", "project_data", f'dbpRisk2_{self.model_prefix}.qgz')
+        project_path_tmp = os.path.join(self.plugin_dir, "data", "tmp_data", f'dbpRisk2_{self.model_prefix}.qgz')
         copyfile(project_path, project_path_tmp)
         project = QgsProject.instance()
         project.read(project_path_tmp)
