@@ -1,0 +1,5 @@
+"NodeID: OutChl, Species: CL2, Pattern: FCL(Tank_outlet), Type: Set Point Booster, Injection Rate: 1.0, Uncertainty (%): 0.0"
+"NodeID: OutChl, Species: C_FRA, Pattern: TOC(Tank_outlet), Type: Set Point Booster, Injection Rate: 0.4, Uncertainty (%): 0.0"
+"NodeID: OutChl, Species: C_SRA, Pattern: TOC(Tank_outlet), Type: Set Point Booster, Injection Rate: 0.6, Uncertainty (%): 0.0"
+"NodeID: OutChl, Species: THMs, Pattern: None, Type: Set Point Booster, Injection Rate: 60.0, Uncertainty (%): 0.0"
+"NodeID: OutChl, Species: HAAs, Pattern: None, Type: Set Point Booster, Injection Rate: 18.0, Uncertainty (%): 0.0"

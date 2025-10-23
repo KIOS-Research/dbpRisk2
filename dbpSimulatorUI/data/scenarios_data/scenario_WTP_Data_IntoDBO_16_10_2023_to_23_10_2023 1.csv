@@ -1,0 +1,6 @@
+"NodeID: WTP, Species: CL2, Pattern: FCL(DWTP_outlet), Type: Set Point Booster, Injection Rate: 1.0, Uncertainty (%): 0.0"
+"NodeID: WTP, Species: C_SRA, Pattern: TOC(DWTP_outlet), Type: Set Point Booster, Injection Rate: 0.6, Uncertainty (%): 0.0"
+"NodeID: WTP, Species: C_FRA, Pattern: TOC(DWTP_outlet), Type: Set Point Booster, Injection Rate: 0.4, Uncertainty (%): 0.0"
+"NodeID: WTP, Species: THMs, Pattern: None, Type: Set Point Booster, Injection Rate: 55.0, Uncertainty (%): 0.0"
+"NodeID: 414, Species: CL2, Pattern: None, Type: Mass Inflow Booster, Injection Rate: 1000.0, Uncertainty (%): 0.0"
+"NodeID: WTP, Species: HAAs, Pattern: None, Type: Set Point Booster, Injection Rate: 18.0, Uncertainty (%): 0.0"
