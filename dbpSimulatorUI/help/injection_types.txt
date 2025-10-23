@@ -1,0 +1,44 @@
+----------------------------------------
+1. CONCEN (Inflow Concentration)
+----------------------------------------
+Use When:
+- A known concentration of a substance is entering the network at a node.
+- Suitable for modeling water quality from a treatment plant or a constant inflow source.
+
+Behavior:
+- Introduces water with a fixed concentration into the node.
+- Can be combined with a time pattern to vary the concentration over time.
+
+----------------------------------------
+2. MASS (Mass Inflow Booster)
+----------------------------------------
+Use When:
+- A fixed amount of mass needs to be injected into the system.
+- Appropriate for booster stations or continuous dosing scenarios.
+
+Behavior:
+- Adds a fixed mass rate at the node, regardless of the hydraulic flow.
+- The amount added does not change with water demand.
+
+----------------------------------------
+3. SETPOINT (Set Point Booster)
+----------------------------------------
+Use When:
+- The objective is to maintain a desired concentration at a specific node.
+- Often used in feedback-based control systems or sensitive zones.
+
+Behavior:
+- Adds just enough mass to bring the outgoing concentration at the node up to the setpoint.
+- Does not inject if the incoming concentration is already at or above the target.
+
+----------------------------------------
+4. FLOWPACED (Flow Based Booster)
+----------------------------------------
+Use When:
+- Chemical dosing needs to be proportional to the flow rate.
+- Common in scenarios where dosing systems automatically adjust with demand.
+
+Behavior:
+- Injects mass proportional to the inflow at the node.
+- Higher flow rates result in more mass being injected.
+----------------------------------------
