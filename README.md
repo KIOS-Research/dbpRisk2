@@ -86,8 +86,16 @@ GPL LICENSE v3.0. See the [LICENSE](LICENSE) file for details.
 
 ## Authors
 
-Dimitris Papazachariou, Ioannis Chrysostomou, Andreas Demosthenous, Costas Papadopoulos, Pavlos Pavlou, Marios Kyriakou, Stelios Vrachimis, Demetris Eliades
-<br>**KIOS Research and Innovation Center of Excellence, University of Cyprus**
+* Dimitris Papazachariou
+* Ioannis Chrysostomou
+* Andreas Demosthenous
+* Costas Papadopoulos
+* Pavlos Pavlou
+* Marios Kyriakou
+* Stelios Vrachimis
+* Demetris Eliades
+
+**KIOS Research and Innovation Center of Excellence, University of Cyprus**
 
 ## Contact
 
