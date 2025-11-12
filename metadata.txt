@@ -6,7 +6,7 @@
 name=dbpRisk 2.0 
 qgisMinimumVersion=3.30
 description=This plugin created for the IntoDBP project.
-version=0.3
+version=0.4
 author=Smart Water Systems Team, KIOS Research and Innovation Center of Excellence, University of Cyprus
 email=mkiria01@ucy.ac.cy
 

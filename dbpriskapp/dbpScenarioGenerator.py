@@ -181,7 +181,7 @@ class WaterQualitySimulation:
         """
         # Ensure 'time' is datetime
         df['time'] = pd.to_datetime(df['time'], errors='coerce')
-        unique_locations = df['SensorLocation'].unique()
+        unique_locations = df['sensorlocation'].unique()
         all_data = {}
         self.title = ""
         self.plot_times = {}
@@ -189,12 +189,12 @@ class WaterQualitySimulation:
 
         for loc in unique_locations:
             # Filter and sort
-            param_data = df[(df['ParameterName'] == parameter) & (df['SensorLocation'] == loc)]
+            param_data = df[(df['parameter'] == parameter) & (df['sensorlocation'] == loc)]
             param_data = param_data.dropna(subset=['time'])  # Drop rows with invalid dates
             param_data = param_data.sort_values(by='time')
 
             if param_data.empty:
-                print(f"[WARNING] No data for ParameterName='{parameter}' at SensorLocation='{loc}'")
+                print(f"[WARNING] No data for parameter='{parameter}' at sensorlocation='{loc}'")
                 continue
 
             values = param_data['value'].to_numpy()
