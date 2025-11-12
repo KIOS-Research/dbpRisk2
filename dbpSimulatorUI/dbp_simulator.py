@@ -31,39 +31,34 @@ import re
 import shutil
 import subprocess
 import sys
-import time
 from shutil import copyfile
-
-import pandas as pd
-import processing
+from qgis.PyQt.QtWidgets import QGroupBox
 from PyQt5.QtCore import Qt, QUrl, QSize
 from PyQt5.QtGui import QColor, QFont, QDesktopServices
-from PyQt5.QtWidgets import (QComboBox, QDialog, QVBoxLayout, QLabel, QDialogButtonBox, 
-                              QTextEdit, QPushButton, QToolBar, QFileDialog, QCompleter, 
-                              QTextBrowser, QAction, QToolButton, QMenu, QWidgetAction,
-                              QDockWidget, QWidget, QMessageBox, QTableWidgetItem,
-                              QGridLayout, QSizePolicy, QTableWidget, QHeaderView, QAbstractItemView)
+from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QLabel, QDialogButtonBox,
+                             QTextEdit, QPushButton, QToolBar, QFileDialog, QCompleter,
+                             QTextBrowser, QAction, QToolButton, QMenu, QWidgetAction,
+                             QDockWidget, QWidget, QMessageBox, QTableWidgetItem,
+                             QGridLayout, QSizePolicy, QTableWidget, QHeaderView, QAbstractItemView)
 from processing.core.Processing import Processing
-from qgis import processing
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QTimer
-from qgis.PyQt.QtGui import QFontDatabase, QIcon
+from qgis.PyQt.QtGui import QIcon
 # from .app.processing_task import ProcessingTask
 from qgis.core import (
-    Qgis, QgsCoordinateReferenceSystem, QgsVectorLayer, QgsProject,
+    Qgis, QgsVectorLayer, QgsProject,
     QgsGraduatedSymbolRenderer, QgsRendererRange, QgsSymbol,
-    QgsStyle, QgsMessageLog, QgsTask, QgsApplication,
-    QgsField, QgsVectorLayerSimpleLabeling, QgsTextFormat, QgsPalLayerSettings, QgsSettings,
+    QgsTask, QgsApplication,
+    QgsPalLayerSettings, QgsSettings,
     QgsVectorLayerJoinInfo
 )
-from qgis.utils import iface, plugins
 
 # Import the code for the DockWidget
 from .dbp_simulator_dockwidget import dbpSimulatorDockWidget
 # Import Epanet Files
 from .importepanetinpfiles.main import ImpEpanet
+
 # Initialize Qt resources from file resources.py
-from .resources import *
 
 try:
     from epyt import epanet
@@ -87,6 +82,7 @@ def get_desktop_path():
     if not os.path.exists(desktop_path):
         desktop_path = os.path.join(os.path.join(os.path.expanduser('~')), 'Onedrive', 'Desktop')
     return desktop_path
+
 
 class PopulatePatternTask(QgsTask):
     def __init__(self, file_path, plugin_instance):
@@ -118,10 +114,10 @@ class PopulatePatternTask(QgsTask):
         try:
             df = self.df
             # basic column checks
-            if 'ParameterName' not in df.columns or 'SensorLocation' not in df.columns:
+            if 'parameter' not in df.columns or 'sensorlocation' not in df.columns:
                 if iface:
                     iface.messageBar().pushMessage("dbpRisk 2.0",
-                                                   "Excel missing required columns: ParameterName or SensorLocation",
+                                                   "Excel missing required columns: parameter or sensorlocation",
                                                    level=Qgis.Warning, duration=5)
                 return
 
@@ -136,8 +132,8 @@ class PopulatePatternTask(QgsTask):
                 combo.addItem("")  # keep blank as first
                 sensor_combo.addItem("")
 
-                params = df['ParameterName'].dropna().astype(str).unique().tolist()
-                sensors = df['SensorLocation'].dropna().astype(str).unique().tolist()
+                params = df['parameter'].dropna().astype(str).unique().tolist()
+                sensors = df['sensorlocation'].dropna().astype(str).unique().tolist()
 
                 combo.addItems(params)
                 sensor_combo.addItems(sensors)
@@ -154,6 +150,7 @@ class PopulatePatternTask(QgsTask):
                 iface.messageBar().pushMessage("dbpRisk 2.0",
                                                f"Error updating UI: {e}",
                                                level=Qgis.Critical, duration=5)
+
 
 class dbpSimulator:
     """QGIS Plugin Implementation."""
@@ -383,78 +380,6 @@ class dbpSimulator:
     def update_plugin_dbp(self):
         self.show_message("Update", "Update functionality not implemented.", button="OK", icon="Info")
 
-    #     import os
-    #     import zipfile
-    #     import tempfile
-    #     import shutil
-    #     import urllib.request
-    #     from qgis.utils import plugins, reloadPlugin
-    #     from qgis.core import QgsApplication
-    #
-    #     # Plugin download URL
-    #     url = "https://www.dropbox.com/scl/fi/cpxm4jzkxvqq7g49s7k42/dbpRisk2.zip?rlkey=b5ke3h4nsaz8rfckokhb1ec4c&dl=1"
-    #
-    #     # Create temporary directory
-    #     temp_dir = tempfile.mkdtemp()
-    #     zip_path = os.path.join(temp_dir, "dbprisk2.zip")
-    #     extracted_temp = os.path.join(temp_dir, "extracted")
-    #
-    #     # Download the ZIP file
-    #     urllib.request.urlretrieve(url, zip_path)
-    #
-    #     # Extract the ZIP to a temporary folder
-    #     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-    #         zip_ref.extractall(extracted_temp)
-    #
-    #     # Define final plugin directory
-    #     plugin_root = os.path.join(QgsApplication.qgisSettingsDirPath(), 'python', 'plugins')
-    #     plugin_name = 'dbpRisk2'
-    #     plugin_target = os.path.join(plugin_root, plugin_name)
-    #
-    #     # Remove old plugin directory if it exists
-    #     if os.path.exists(plugin_target):
-    #         shutil.rmtree(plugin_target)
-    #
-    #     # Find the correct folder in extracted files (flatten if needed)
-    #     for item in os.listdir(extracted_temp):
-    #         item_path = os.path.join(extracted_temp, item)
-    #         if item.lower() == plugin_name.lower() and os.path.isdir(item_path):
-    #             shutil.move(item_path, plugin_target)
-    #             break
-    #     else:
-    #         # If the zip didn't have a top-level folder, move all contents into plugin_target
-    #         os.makedirs(plugin_target)
-    #         for item in os.listdir(extracted_temp):
-    #             shutil.move(os.path.join(extracted_temp, item), plugin_target)
-    #
-    #     # Reload the plugin
-    #     if plugin_name in plugins:
-    #         reloadPlugin(plugin_name)
-    #     else:
-    #         print(f"Plugin '{plugin_name}' not found. Make sure it was extracted correctly.")
-    #
-    #     # Clean up temporary directory
-    #     shutil.rmtree(temp_dir)
-    #
-    #     """Run method that performs all the real work"""
-    #     if QgsProject.instance().isDirty():
-    #         msg_box = QMessageBox()
-    #         msg_box.setWindowTitle("Save project")
-    #         msg_box.setText("Do you want to save the changes to the project?")
-    #         msg_box.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
-    #         msg_box.setDefaultButton(QMessageBox.Save)
-    #         msg_box.setIcon(QMessageBox.Information)
-    #         button_clicked = msg_box.exec_()
-    #         if button_clicked == QMessageBox.Save:
-    #             self.iface.actionSaveProject().trigger()
-    #         elif button_clicked == QMessageBox.Discard:
-    #             QgsProject.instance().clear()
-    #         else:
-    #             return
-    #     import subprocess
-    #     self.iface.actionExit().trigger()
-    #     subprocess.Popen(QgsApplication.applicationFilePath())
-
     def hide_show_pantool(self):
         if self.hide_btn.isChecked():
             self.hide_toolbars_and_panels()
@@ -504,40 +429,6 @@ class dbpSimulator:
                 pkg_name = line.split('==')[0].split('>=')[0].strip()
                 packages.append((line, pkg_name))
         return packages
-
-    def check_requirements_file(self, file_path):
-        if not os.path.exists(file_path):
-            QMessageBox.warning(None, "Missing File", f"Could not find requirements file:\n{file_path}")
-            return
-
-        packages = self.parse_requirements_file(file_path)
-        missing = []
-
-        for full_spec, module_name in packages:
-            try:
-                importlib.import_module(module_name)
-                if 'epyt' in module_name:
-                    import epyt
-                    if epyt.__version__ != '1.2.2':
-                        missing.append(full_spec)
-            except ImportError:
-                missing.append(full_spec)
-
-        if not missing:
-            return
-
-        msg = "The following packages are required:\n\n"
-        msg += "\n".join(missing)
-        msg += "\n\nDo you want to install them now?"
-
-        reply = QMessageBox.question(None, 'Missing Dependencies', msg, QMessageBox.Yes | QMessageBox.No,
-                                     QMessageBox.No)
-
-        if reply == QMessageBox.Yes:
-            pip = os.path.join(sys.prefix, 'scripts', 'pip.exe') if os.name == 'nt' else 'pip'
-            for pkg in missing:
-                subprocess.call([pip, 'install', pkg])
-            QMessageBox.information(None, "Dependencies", "Installation complete. Please restart QGIS.")
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
@@ -720,9 +611,11 @@ class dbpSimulator:
         self.dockwidget.insert_action.setEnabled(True)
         self.dockwidget.scenario_table.setEnabled(True)
         self.dockwidget.import_scenario.setEnabled(True)
+        self.gb = getattr(self.dockwidget, "groupBox_3", None)
+        #gb.setEnabled(False)
         # self.dockwidget.export_scenario.setEnabled(True)
         self.dockwidget.data_manager.setEnabled(True)
-        #self.dockwidget.import_node_injection.setEnabled(True)
+        # self.dockwidget.import_node_injection.setEnabled(True)
 
         self.G.unloadMSX()
 
@@ -1761,7 +1654,7 @@ class dbpSimulator:
         # self.update_plot_buttons()
 
     def run_app(self):
-        # change current directory 
+        # change current directory
         os.chdir(self.plugin_dir)
 
         if not self.import_excel_file_flag:
@@ -1816,15 +1709,24 @@ class dbpSimulator:
 
         self.iface.messageBar().clearWidgets()
 
-        progressMessageBar = self.iface.messageBar()
         progressbar = QProgressBar()
-        progressMessageBar.pushWidget(progressbar)
-        progress_widget = progressMessageBar.pushWidget(progressbar)
+        progressbar.setRange(0, 100)
+        progressbar.setValue(0)
 
-        # Processing feedback
-        def progress_changed(progress):
-            progressbar.setValue(progress)
-            if progress == 100:
+        progressMessageBar = self.iface.messageBar()
+        progressMessageBar.pushWidget(progressbar)
+
+        def progress_changed(p):
+            if p is None:
+                return
+
+            if 0.0 <= p <= 1.0:
+                p *= 100.0
+            p = int(round(max(0, min(100, p))))
+
+            progressbar.setValue(p)
+
+            if p >= 100:
                 self.iface.messageBar().clearWidgets()
 
         f = QgsProcessingFeedback()
@@ -1972,7 +1874,7 @@ class dbpSimulator:
 
         for btn in tb.findChildren(QToolButton):
             btn.setIconSize(QSize(20, 20))
-            btn.setAutoRaise(True)  
+            btn.setAutoRaise(True)
             btn.setContentsMargins(0, 0, 0, 0)
 
         tb.setStyleSheet(
@@ -2395,8 +2297,7 @@ class dbpSimulator:
         return result_df
 
     def populate_sim_hour(self):
-        t_d = self.dockwidget.simulation_days.value()
-        total_hours = t_d * 24
+        total_hours = self.t_d * 24
 
         self.dockwidget.sim_hour.setValue(0)
 
@@ -2474,12 +2375,12 @@ class dbpSimulator:
         try:
             df = pd.read_excel(file_path)
 
-            if 'ParameterName' not in df.columns:
-                self.show_message("Error", "'ParameterName' column not found in the Excel file.", button="OK",
+            if 'parameter' not in df.columns:
+                self.show_message("Error", "'parameter' column not found in the Excel file.", button="OK",
                                   icon="Warning")
                 return
 
-            unique_params = sorted(df['ParameterName'].dropna().unique())
+            unique_params = sorted(df['parameter'].dropna().unique())
 
             combo.addItem("")  # Add empty item first
             combo.addItems(unique_params)
@@ -2497,12 +2398,12 @@ class dbpSimulator:
         try:
             df = pd.read_excel(file_path)
 
-            if 'SensorLocation' not in df.columns:
-                self.show_message("Error", "'SensorLocation' column not found in the Excel file.", button="OK",
+            if 'sensorLocation' not in df.columns:
+                self.show_message("Error", "'sensorlocation' column not found in the Excel file.", button="OK",
                                   icon="Warning")
                 return
 
-            unique_locations = sorted(df['SensorLocation'].dropna().unique())
+            unique_locations = sorted(df['sensorlocation'].dropna().unique())
             combo.addItem("")  # Add first blank item
             combo.addItems(unique_locations)
 
@@ -2698,7 +2599,8 @@ class dbpSimulator:
         if os.path.exists(pdf_path):
             QDesktopServices.openUrl(QUrl.fromLocalFile(pdf_path))
         else:
-            self.show_message("Error", "dbprisk2-readthedocs-io-en-latest.pdf not found in the help folder.", button="OK", icon="Warning")
+            self.show_message("Error", "dbprisk2-readthedocs-io-en-latest.pdf not found in the help folder.",
+                              button="OK", icon="Warning")
 
     def show_about(self):
         """Displays a styled About dialog with clickable links."""
@@ -2796,9 +2698,6 @@ class dbpSimulator:
             # first run of plugin
             # removed on close (see self.onClosePlugin method)
             if self.dockwidget is None:
-                requirements_path = os.path.join(self.plugin_dir, 'installpackages', 'requirements.txt')
-                self.check_requirements_file(requirements_path)
-
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = dbpSimulatorDockWidget()
                 self.imported_excel_file = os.path.join(self.plugin_dir, 'data', 'ts_data', 'sensors_data.xlsx')
@@ -3016,6 +2915,9 @@ class dbpSimulator:
             lbl_browse = self.dockwidget.excel_path
 
             self.dockwidget.show()
+            self.gb = getattr(self.dockwidget, "groupBox_3", None)
+            if self.gb:
+                self.gb.setEnabled(False)
 
         self.layers_panel = self.iface.mainWindow().findChild(QDockWidget, "Layers")
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.layers_panel)
@@ -3025,9 +2927,12 @@ class dbpSimulator:
         except:
             pass
         # self.iface.mainWindow().menuBar().setVisible(False)
+
     def import_sensor_data(self):
         self.populate_multiplication_pattern_async(self.imported_excel_file)
         self.import_excel_file_flag = True
+        if self.gb:
+            QTimer.singleShot(0, lambda: self.gb.setEnabled(True))
 
     def show_excel_info(self):
 
@@ -3263,9 +3168,6 @@ class dbpSimulator:
     def plot_data_with_uncertainty(self, measured_data,
                                    sensor_index, species_index, species_names,
                                    sensor_description, subtitle=None, show_measured=False):
-        from matplotlib import cm
-        import matplotlib.colors as mcolors
-        import matplotlib.pyplot as plt
         from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
         from matplotlib.figure import Figure
         import matplotlib.dates as mdates

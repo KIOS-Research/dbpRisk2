@@ -51,8 +51,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>733</width>
-         <height>923</height>
+         <width>737</width>
+         <height>932</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_14">
@@ -762,6 +762,9 @@
                    </item>
                    <item row="3" column="4">
                     <widget class="QComboBox" name="multiplication_pattern_excel">
+                     <property name="enabled">
+                      <bool>true</bool>
+                     </property>
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                        <horstretch>0</horstretch>
@@ -920,6 +923,9 @@
                    </item>
                    <item row="3" column="6">
                     <widget class="QComboBox" name="sensor_location">
+                     <property name="enabled">
+                      <bool>true</bool>
+                     </property>
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
                        <horstretch>0</horstretch>
