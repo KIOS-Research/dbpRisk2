@@ -26,11 +26,10 @@ import html
 import importlib
 import json
 import os
-import platform
+import pathlib
 import re
 import shutil
-import subprocess
-import sys
+import webbrowser
 from shutil import copyfile
 from qgis.PyQt.QtWidgets import QGroupBox
 from PyQt5.QtCore import Qt, QUrl, QSize
@@ -87,11 +86,6 @@ def get_desktop_path():
     if not os.path.exists(desktop_path):
         desktop_path = os.path.join(os.path.join(os.path.expanduser('~')), 'Onedrive', 'Desktop')
     return desktop_path
-
-
-def _resolve_executable(name):
-    """Resolve an executable name to an absolute path via PATH lookup, falling back to the bare name."""
-    return shutil.which(name) or name
 
 
 class PopulatePatternTask(QgsTask):
@@ -1646,7 +1640,11 @@ class dbpSimulator:
         self.iface.messageBar().clearWidgets()
 
         try:
-            subprocess.call([_resolve_executable('taskkill'), '/f', '/im', self.app])
+            import psutil
+            app_name = self.app.lower()
+            for proc in psutil.process_iter(['name']):
+                if (proc.info.get('name') or '').lower() == app_name:
+                    proc.terminate()
             self.iface.messageBar().pushMessage("dbpRisk 2.0", "dbpSimulator successfully terminated.",
                                                 level=0, duration=2)
         except Exception:
@@ -2138,7 +2136,6 @@ class dbpSimulator:
         from PyQt5 import QtWidgets, uic
         from PyQt5.QtWidgets import QDialog, QTreeView, QMessageBox, QFileSystemModel
         from PyQt5.QtCore import QDir
-        import sys, os, subprocess
 
         dialog = QDialog(self.dockwidget)
 
@@ -2170,12 +2167,7 @@ class dbpSimulator:
             if not path:
                 QMessageBox.warning(dialog, 'No file', 'Please select a file.')
                 return
-            if sys.platform.startswith('linux'):
-                subprocess.Popen([_resolve_executable('xdg-open'), path])
-            elif sys.platform == 'darwin':
-                subprocess.Popen([_resolve_executable('open'), path])
-            elif sys.platform == 'win32':
-                os.startfile(path)
+            webbrowser.open(pathlib.Path(path).absolute().as_uri())
 
         def delete_file():
             path = get_selected_file()
@@ -2483,12 +2475,9 @@ class dbpSimulator:
             return
 
         try:
-            if platform.system() == 'Windows':
-                subprocess.Popen([_resolve_executable('notepad.exe'), model_path])
-            else:
-                subprocess.Popen([_resolve_executable('xdg-open'), model_path])
+            webbrowser.open(pathlib.Path(model_path).absolute().as_uri())
         except Exception as e:
-            self.show_message("Error", f"Could not open file in Notepad:\n{e}", button="OK", icon="Critical")
+            self.show_message("Error", f"Could not open file:\n{e}", button="OK", icon="Critical")
 
     def open_reaction_model_in_notepad(self):
         selected_model = self.dockwidget.reaction_models.currentText()
@@ -2503,12 +2492,9 @@ class dbpSimulator:
             return
 
         try:
-            if platform.system() == 'Windows':
-                subprocess.Popen([_resolve_executable('notepad.exe'), model_path])
-            else:
-                subprocess.Popen([_resolve_executable('xdg-open'), model_path])
+            webbrowser.open(pathlib.Path(model_path).absolute().as_uri())
         except Exception as e:
-            self.show_message("Error", f"Could not open file in Notepad:\n{e}", button="OK", icon="Critical")
+            self.show_message("Error", f"Could not open file:\n{e}", button="OK", icon="Critical")
 
     def open_network_model_in_epanet(self):
         selected_model = self.dockwidget.network_models.currentText()
@@ -2522,17 +2508,15 @@ class dbpSimulator:
             self.show_message("Warning", f"Hydraulic model file not found:\n{model_path}", button="OK", icon="Warning")
             return
 
-        # Path to EPANET executable – update this if installed elsewhere
-        epanet_exe = "C:\\Program Files (x86)\\EPANET 2.2\\Epanet2w.exe"
-
-        if not os.path.exists(epanet_exe):
-            self.show_message("Error", f"EPANET not found at:\n{epanet_exe}", button="OK", icon="Critical")
-            return
-
         try:
-            subprocess.Popen([epanet_exe, model_path])
-        except Exception as e:
-            self.show_message("Error", f"Could not open in EPANET:\n{e}", button="OK", icon="Critical")
+            os.startfile(model_path)
+        except OSError as e:
+            self.show_message(
+                "Error",
+                f"Could not open the model file with its associated application:\n{e}\n\n"
+                "If EPANET is installed but not set as the default application for .inp files, "
+                "associate the extension with EPANET in Windows and try again.",
+                button="OK", icon="Critical")
 
     def override_timeduration(self):
         if self.dockwidget.override_time_checkbox.isChecked():
