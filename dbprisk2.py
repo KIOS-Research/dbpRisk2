@@ -27,8 +27,6 @@ from typing import List
 # -------- Minimal additions: rewrite/run .bat and check requirements ----------
 import os
 import re
-import shutil
-import subprocess
 from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.core import QgsMessageLog, Qgis, QgsApplication
 # -----------------------------------------------------------------------------
@@ -141,24 +139,16 @@ ENDLOCAL
 
 def _run_installer_bat(install_dir: str) -> bool:
     """
-    Run the installer .bat and return True if the process exit code == 0.
+    Launch the installer .bat in its own window. This runs asynchronously
+    (no subprocess), so the exit code/output cannot be captured here; the
+    caller cannot know at this point whether the install actually succeeded.
     """
     bat_path = _write_installer_bat(install_dir)
     try:
-        proc = subprocess.run(
-            [shutil.which("cmd.exe") or "cmd.exe", "/C", bat_path],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=install_dir
-        )
-        if proc.stdout:
-            log(proc.stdout)
-        if proc.stderr:
-            log(proc.stderr, Qgis.Warning)
-        return proc.returncode == 0
-    except Exception as e:
-        log(f"Running installer .bat failed: {e}", Qgis.Critical)
+        os.startfile(bat_path)
+        return True
+    except OSError as e:
+        log(f"Launching installer .bat failed: {e}", Qgis.Critical)
         return False
 # -----------------------------------------------------------------------------
 
@@ -239,20 +229,12 @@ class dbpRisk2Plugin:
         ok = _run_installer_bat(install_dir)
         if not ok:
             QMessageBox.critical(self.iface.mainWindow(), "Installation failed",
-                                 "The installer did not complete successfully. See QGIS Logs for details.")
+                                 "Could not launch the installer. See QGIS Logs for details.")
             return False
 
-        missing_after = _missing_imports(req_file)
-        if not missing_after:
-            QMessageBox.information(self.iface.mainWindow(), "Packages installed",
-                                    "Required packages were installed successfully.\n"
-                                    "If anything still fails to import, please restart QGIS.")
-            return True
-
-        QMessageBox.critical(self.iface.mainWindow(), "Packages still missing",
-                             "Some packages still could not be imported after installation:\n\n"
-                             + "\n".join(missing_after)
-                             + "\n\nPlease check the QGIS Logs for details.")
+        QMessageBox.information(self.iface.mainWindow(), "Installer started",
+                                "The installer was launched in a separate window.\n"
+                                "Please wait for it to finish, then restart QGIS.")
         return False
 
     def initGui(self):

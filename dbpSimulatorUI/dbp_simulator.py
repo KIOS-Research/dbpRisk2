@@ -2509,8 +2509,8 @@ class dbpSimulator:
             return
 
         try:
-            os.startfile(model_path)
-        except OSError as e:
+            webbrowser.open(pathlib.Path(model_path).absolute().as_uri())
+        except Exception as e:
             self.show_message(
                 "Error",
                 f"Could not open the model file with its associated application:\n{e}\n\n"
