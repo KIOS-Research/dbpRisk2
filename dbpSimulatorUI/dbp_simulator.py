@@ -50,7 +50,7 @@ from qgis.core import (
     QgsGraduatedSymbolRenderer, QgsRendererRange, QgsSymbol,
     QgsTask, QgsApplication,
     QgsPalLayerSettings, QgsSettings,
-    QgsVectorLayerJoinInfo
+    QgsVectorLayerJoinInfo, QgsMessageLog
 )
 
 # Import the code for the DockWidget
@@ -67,14 +67,15 @@ try:
     import pandas as pd
 except ImportError:
     subprocess.call(
-        ['pip', 'install', 'numpy==1.22.4', 'epyt==1.2.2', 'xlsxwriter>=3.2.0', 'openpyxl>=3.1.0', 'pandas>=1.5.3'])
+        [sys.executable, '-m', 'pip', 'install',
+         'numpy==1.22.4', 'epyt==1.2.2', 'xlsxwriter>=3.2.0', 'openpyxl>=3.1.0', 'pandas>=1.5.3'])
 try:
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.figure import Figure
 except ImportError:
-    subprocess.call(['pip', 'install', 'matplotlib>=3.7.2'])
+    subprocess.call([sys.executable, '-m', 'pip', 'install', 'matplotlib>=3.7.2'])
 
 
 def get_desktop_path():
@@ -82,6 +83,11 @@ def get_desktop_path():
     if not os.path.exists(desktop_path):
         desktop_path = os.path.join(os.path.join(os.path.expanduser('~')), 'Onedrive', 'Desktop')
     return desktop_path
+
+
+def _resolve_executable(name):
+    """Resolve an executable name to an absolute path via PATH lookup, falling back to the bare name."""
+    return shutil.which(name) or name
 
 
 class PopulatePatternTask(QgsTask):
@@ -577,8 +583,8 @@ class dbpSimulator:
                 self.reservoirs_layer = QgsProject.instance().mapLayersByName(f'{self.model_prefix}_reservoirs')[0]
                 self.tanks_layer = QgsProject.instance().mapLayersByName(f'{self.model_prefix}_tanks')[0]
                 self.iface.setActiveLayer(self.junctions_layer)
-            except:
-                pass
+            except Exception as e:
+                QgsMessageLog.logMessage(f"Could not set active layer: {e}", "dbpRisk", Qgis.Warning)
         finally:
             message = f'Models loaded successfully!'
             level = 3  # Qgis.Success
@@ -698,8 +704,8 @@ class dbpSimulator:
                 if isinstance(ids, tuple) and len(ids) == 2:
                     ids = ids[1]
                 return set(map(str, ids))
-        except Exception:
-            pass
+        except Exception as e:
+            QgsMessageLog.logMessage(f"Could not read node IDs from model: {e}", "dbpRisk", Qgis.Warning)
 
         out = set()
         for lyr in (
@@ -1144,7 +1150,7 @@ class dbpSimulator:
                     injection_rate = float(item_text.split("Injection Rate:")[1].split(",")[0].strip())
                     msx_uncertainty = float(item_text.split("Uncertainty (%):")[1].strip())
 
-                except Exception:
+                except (ValueError, IndexError):
                     continue
 
             elif "Initial Concentration" in item_text:
@@ -1154,7 +1160,7 @@ class dbpSimulator:
                     species = item_text.split("Species:")[1].split(",")[0].strip()
                     initial_conc = float(item_text.split("Initial Concentration:")[1].split(",")[0].strip())
                     msx_uncertainty = float(item_text.split("Uncertainty (%):")[1].strip())
-                except Exception:
+                except (ValueError, IndexError):
                     continue
 
             elif "Chemical Parameter" in item_text:
@@ -1163,21 +1169,21 @@ class dbpSimulator:
                     chemical_param = item_text.split("Chemical Parameter:")[1].split(",")[0].strip()
                     chemical_value = float(item_text.split("Value:")[1].split(",")[0].strip())
                     msx_uncertainty = float(item_text.split("Uncertainty (%):")[1].strip())
-                except Exception:
+                except (ValueError, IndexError):
                     continue
 
             elif "Demands Uncertainty" in item_text:
                 input_type = 4
                 try:
                     demand_uncertainty = float(item_text.split("Demands Uncertainty (%):")[1].strip())
-                except Exception:
+                except (ValueError, IndexError):
                     continue
 
             elif "Simulation duration" in item_text:
                 try:
                     duration_days = int(item_text.split(":")[-1].strip())
                     self.t_d = duration_days
-                except Exception:
+                except (ValueError, IndexError):
                     continue
 
             # Append to internal lists
@@ -1631,15 +1637,15 @@ class dbpSimulator:
     def showError(self):
         try:
             self.timer_watch.stop()
-        except:
-            pass
+        except Exception as e:
+            QgsMessageLog.logMessage(f"Could not stop timer: {e}", "dbpRisk", Qgis.Warning)
         self.iface.messageBar().clearWidgets()
 
         try:
-            os.system(f'taskkill /f /im {self.app}')
+            subprocess.call([_resolve_executable('taskkill'), '/f', '/im', self.app])
             self.iface.messageBar().pushMessage("dbpRisk 2.0", "dbpSimulator successfully terminated.",
                                                 level=0, duration=2)
-        except:
+        except Exception:
             self.iface.messageBar().pushMessage("dbpRisk 2.0", "Error Encountered while running "
                                                                "script.", level=1, duration=2)
 
@@ -1850,8 +1856,8 @@ class dbpSimulator:
         self.dock_plots = uic.loadUi('dbp_plots_dockwidget.ui')
         try:
             self.dock_plots.close()
-        except:
-            pass
+        except Exception as e:
+            QgsMessageLog.logMessage(f"Could not close existing plots dock: {e}", "dbpRisk", Qgis.Warning)
 
         self.dock_plots.setAllowedAreas(Qt.RightDockWidgetArea | Qt.LeftDockWidgetArea)
         # Add the matplotlib canvas and toolbar to the 'plots' QWidget using a grid layout
@@ -2161,9 +2167,9 @@ class dbpSimulator:
                 QMessageBox.warning(dialog, 'No file', 'Please select a file.')
                 return
             if sys.platform.startswith('linux'):
-                subprocess.Popen(['xdg-open', path])
+                subprocess.Popen([_resolve_executable('xdg-open'), path])
             elif sys.platform == 'darwin':
-                subprocess.Popen(['open', path])
+                subprocess.Popen([_resolve_executable('open'), path])
             elif sys.platform == 'win32':
                 os.startfile(path)
 
@@ -2474,9 +2480,9 @@ class dbpSimulator:
 
         try:
             if platform.system() == 'Windows':
-                subprocess.Popen(['notepad.exe', model_path])
+                subprocess.Popen([_resolve_executable('notepad.exe'), model_path])
             else:
-                subprocess.Popen(['xdg-open', model_path])
+                subprocess.Popen([_resolve_executable('xdg-open'), model_path])
         except Exception as e:
             self.show_message("Error", f"Could not open file in Notepad:\n{e}", button="OK", icon="Critical")
 
@@ -2494,9 +2500,9 @@ class dbpSimulator:
 
         try:
             if platform.system() == 'Windows':
-                subprocess.Popen(['notepad.exe', model_path])
+                subprocess.Popen([_resolve_executable('notepad.exe'), model_path])
             else:
-                subprocess.Popen(['xdg-open', model_path])
+                subprocess.Popen([_resolve_executable('xdg-open'), model_path])
         except Exception as e:
             self.show_message("Error", f"Could not open file in Notepad:\n{e}", button="OK", icon="Critical")
 
@@ -2924,8 +2930,8 @@ class dbpSimulator:
         self.layers_panel.show()
         try:
             self.dockwidget.show()
-        except:
-            pass
+        except Exception as e:
+            QgsMessageLog.logMessage(f"Could not show dock widget: {e}", "dbpRisk", Qgis.Warning)
         # self.iface.mainWindow().menuBar().setVisible(False)
 
     def import_sensor_data(self):

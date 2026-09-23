@@ -27,6 +27,7 @@ from typing import List
 # -------- Minimal additions: rewrite/run .bat and check requirements ----------
 import os
 import re
+import shutil
 import subprocess
 from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.core import QgsMessageLog, Qgis, QgsApplication
@@ -145,7 +146,7 @@ def _run_installer_bat(install_dir: str) -> bool:
     bat_path = _write_installer_bat(install_dir)
     try:
         proc = subprocess.run(
-            ["cmd.exe", "/C", bat_path],
+            [shutil.which("cmd.exe") or "cmd.exe", "/C", bat_path],
             check=False,
             capture_output=True,
             text=True,

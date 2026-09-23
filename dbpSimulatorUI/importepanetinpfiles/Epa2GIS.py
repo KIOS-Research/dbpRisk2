@@ -5,7 +5,7 @@ from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.PyQt.QtGui import QIcon
 from qgis.core import Qgis, QgsFeature, QgsVectorLayer, QgsVectorFileWriter, QgsField, QgsPointXY, QgsGeometry, \
-    QgsProject, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
+    QgsProject, QgsCoordinateReferenceSystem, QgsLayerTreeLayer, QgsMessageLog
 from qgis.gui import QgsMessageBar
 import collections
 import numpy as np
@@ -249,8 +249,8 @@ def epa2gis(inpname, epsg_crs):
                     featJ.setAttribute(w, ndDes[i])
                 prJunction.addFeatures([featJ])
 
-            except:
-                pass
+            except Exception as e:
+                QgsMessageLog.logMessage(f"Skipped junction feature {i}: {e}", "dbpRisk", Qgis.Warning)
         if i < nlinkCount:
             if len(stat) == i:
                 ch = 1
@@ -286,14 +286,14 @@ def epa2gis(inpname, epsg_crs):
                         [linkID[i], ndlConn[0][i], ndlConn[1][i], stat[i], linkLengths[i], linkDiameters[i], linkRough[i],
                          linkMinorloss[i],linkDescription[i]])
                     prPipe.addFeatures([featPipe])
-            except:
-                pass
+            except Exception as e:
+                QgsMessageLog.logMessage(f"Skipped pipe feature {i}: {e}", "dbpRisk", Qgis.Warning)
 
         if i < d.getBinNodeTankCount():
             p = d.getBinNodeTankIndex()[i] - 1
             try:
                 ndIndexNew = ndCoordsID.index(ndID[p])
-            except:
+            except ValueError:
                 continue
             featTank = QgsFeature()
             point = QgsPointXY(float(x[ndIndexNew]), float(y[ndIndexNew]))
@@ -307,7 +307,7 @@ def epa2gis(inpname, epsg_crs):
             p = d.getBinNodeReservoirIndex()[i] - 1
             try:
                 ndIndexNew = ndCoordsID.index(ndID[p])
-            except:
+            except ValueError:
                 continue
             feature = QgsFeature()
             point = QgsPointXY(float(x[ndIndexNew]), float(y[ndIndexNew]))
@@ -664,7 +664,7 @@ def epa2gis(inpname, epsg_crs):
             try:
                 point1 = QgsPointXY(float(x[ndCoordsID.index(d.getBinLinkFromNode()[p])]), float(y[ndCoordsID.index(d.getBinLinkFromNode()[p])]))
                 point2 = QgsPointXY(float(x[ndCoordsID.index(d.getBinLinkToNode()[p])]), float(y[ndCoordsID.index(d.getBinLinkToNode()[p])]))
-            except:
+            except ValueError:
                 continue
             feature = QgsFeature()
             feature.setGeometry(QgsGeometry.fromPolylineXY([point1, point2]))
@@ -755,7 +755,7 @@ def epa2gis(inpname, epsg_crs):
             try:
                 point1 = QgsPointXY(float(x[ndCoordsID.index(d.getBinLinkFromNode()[p])]), float(y[ndCoordsID.index(d.getBinLinkFromNode()[p])]))
                 point2 = QgsPointXY(float(x[ndCoordsID.index(d.getBinLinkToNode()[p])]), float(y[ndCoordsID.index(d.getBinLinkToNode()[p])]))
-            except:
+            except ValueError:
                 continue
             feature = QgsFeature()
             feature.setGeometry(QgsGeometry.fromPolylineXY([point1, point2]))
@@ -783,7 +783,7 @@ def epa2gis(inpname, epsg_crs):
             feature.setAttribute(5, Curve)
             try:
                 feature.setAttribute(6, pumpdescription[i])
-            except:
+            except IndexError:
                 pass
 
             if 'curveIndex' in locals():

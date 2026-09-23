@@ -822,7 +822,7 @@ def getBinInfo():
                     try:
                         index_semicolons = s1.index(';')
                         BinLinkPumpDescription.append(s1[index_semicolons + 1:])
-                    except:
+                    except ValueError:
                         pass
 
                     try:
@@ -830,7 +830,7 @@ def getBinInfo():
                         if mm[index_ + 1].isdigit() == True:
                             BinLinkPumpPower.append((mm[index_ + 1]))
                             BinLinkPumpNameIDPower.append(mm[0])
-                    except:
+                    except (ValueError, IndexError):
                         pass
 
                     try:

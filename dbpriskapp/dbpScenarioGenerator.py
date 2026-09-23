@@ -36,7 +36,7 @@ import pandas as pd
 try:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.figure import Figure
-except:
+except ImportError:
     pass
 from epyt import epanet
 
@@ -231,10 +231,12 @@ class WaterQualitySimulation:
                 try:
                     self.G.unloadMSX()
                     self.G.unload()
-                except:
-                    pass  # Ignore errors if nothing was loaded
-        except:
-            pass
+                except Exception as e:
+                    if self.feedback is not None:
+                        self.feedback.pushInfo(f"Nothing to unload: {e}")
+        except Exception as e:
+            if self.feedback is not None:
+                self.feedback.pushInfo(f"Could not check for existing MSX project: {e}")
         if self.feedback is not None:
             self.feedback.setProgress(10)
             self.feedback.pushInfo(

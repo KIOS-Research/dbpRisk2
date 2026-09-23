@@ -33,11 +33,12 @@ __revision__ = '$Format:%H$'
 import json
 import os
 import  subprocess
+import sys
 
 try:
  import pandas as pd
 except ImportError:
-    subprocess.check_call(['pip', 'install', 'pandas>=1.5.3'])
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pandas>=1.5.3'])
 
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProcessingAlgorithm,
