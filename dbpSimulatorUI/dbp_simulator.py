@@ -65,17 +65,21 @@ try:
     import openpyxl
     import numpy
     import pandas as pd
-except ImportError:
-    subprocess.call(
-        [sys.executable, '-m', 'pip', 'install',
-         'numpy==1.22.4', 'epyt==1.2.2', 'xlsxwriter>=3.2.0', 'openpyxl>=3.1.0', 'pandas>=1.5.3'])
+except ImportError as e:
+    QgsMessageLog.logMessage(
+        f"Missing required package(s): {e}. Install the plugin dependencies listed in "
+        "installpackages/requirements.txt (the plugin offers to install these automatically on load).",
+        "dbpRisk", Qgis.Critical)
 try:
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.figure import Figure
-except ImportError:
-    subprocess.call([sys.executable, '-m', 'pip', 'install', 'matplotlib>=3.7.2'])
+except ImportError as e:
+    QgsMessageLog.logMessage(
+        f"Missing required package(s): {e}. Install the plugin dependencies listed in "
+        "installpackages/requirements.txt (the plugin offers to install these automatically on load).",
+        "dbpRisk", Qgis.Critical)
 
 
 def get_desktop_path():

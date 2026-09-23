@@ -32,17 +32,18 @@ __revision__ = '$Format:%H$'
 
 import json
 import os
-import  subprocess
-import sys
-
-try:
- import pandas as pd
-except ImportError:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pandas>=1.5.3'])
 
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProcessingAlgorithm,
-                       QgsProcessingParameterString)
+                       QgsProcessingParameterString, QgsMessageLog, Qgis)
+
+try:
+ import pandas as pd
+except ImportError as e:
+    QgsMessageLog.logMessage(
+        f"Missing required package(s): {e}. Install the plugin dependencies listed in "
+        "installpackages/requirements.txt (the plugin offers to install these automatically on load).",
+        "dbpRisk", Qgis.Critical)
 
 
 class dbpriskappAlgorithm(QgsProcessingAlgorithm):
