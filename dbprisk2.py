@@ -137,19 +137,6 @@ ENDLOCAL
     return bat_path
 
 
-def _run_installer_bat(install_dir: str) -> bool:
-    """
-    Launch the installer .bat in its own window. This runs asynchronously
-    (no subprocess), so the exit code/output cannot be captured here; the
-    caller cannot know at this point whether the install actually succeeded.
-    """
-    bat_path = _write_installer_bat(install_dir)
-    try:
-        os.startfile(bat_path)
-        return True
-    except OSError as e:
-        log(f"Launching installer .bat failed: {e}", Qgis.Critical)
-        return False
 # -----------------------------------------------------------------------------
 
 
@@ -200,8 +187,9 @@ class dbpRisk2Plugin:
 
     def _ensure_requirements(self) -> bool:
         """
-        Only prompt/install if imports are actually missing.
-        Re-check after install; return True if everything importable.
+        Only warn if imports are actually missing. The plugin does not install
+        anything itself; it writes the installer .bat and tells the user where
+        it is so they can run it themselves.
         If requirements.txt is absent or unreadable, skip quietly.
         """
         install_dir = os.path.join(os.path.dirname(__file__), "installpackages")
@@ -211,30 +199,17 @@ class dbpRisk2Plugin:
         if not missing:
             return True
 
-        # Ask user for permission
-        msg = QMessageBox(self.iface.mainWindow())
-        msg.setIcon(QMessageBox.Question)
-        msg.setWindowTitle("Install Python packages")
-        msg.setText(
+        bat_path = _write_installer_bat(install_dir)
+        QMessageBox.warning(
+            self.iface.mainWindow(),
+            "Missing Python packages",
             "This plugin needs some Python packages that aren’t installed:\n\n"
             + "\n".join(missing)
-            + f"\n\nInstall them now for the current QGIS?"
-            + f"\n\n(Detected QGIS: {Qgis.QGIS_VERSION})"
+            + "\n\nTo install them for this QGIS "
+            + f"(detected QGIS: {Qgis.QGIS_VERSION}), run this installer yourself "
+            + f"(double-click it, or run it from a command prompt):\n\n{bat_path}\n\n"
+            + "Then restart QGIS."
         )
-        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        if msg.exec() != QMessageBox.Yes:
-            log("User declined to install missing packages.", Qgis.Warning)
-            return False
-
-        ok = _run_installer_bat(install_dir)
-        if not ok:
-            QMessageBox.critical(self.iface.mainWindow(), "Installation failed",
-                                 "Could not launch the installer. See QGIS Logs for details.")
-            return False
-
-        QMessageBox.information(self.iface.mainWindow(), "Installer started",
-                                "The installer was launched in a separate window.\n"
-                                "Please wait for it to finish, then restart QGIS.")
         return False
 
     def initGui(self):
